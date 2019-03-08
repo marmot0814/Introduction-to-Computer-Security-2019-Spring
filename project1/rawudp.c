@@ -9,24 +9,24 @@
 #define PCKT_LEN 8192
 
 struct ipheader {
-	unsigned char      iph_ihl:5, iph_ver:4;    // ip header length, ip header version
-	unsigned char      iph_tos;                 // ip header type to service
-	unsigned short int iph_len;                 // ip header datagram length
-	unsigned short int iph_ident;               // ip header identifier
-	unsigned char      iph_flag;                // ip header flag
-	unsigned short int iph_offset;				// ip header offset
-	unsigned char      iph_ttl;					// ip header time to live
-	unsigned char      iph_protocol;			// ip header protocol
-	unsigned short int iph_chksum;				// ip header check sum
-	unsigned int       iph_sourceip;			// ip header source ip
-	unsigned int       iph_destip;				// ip header destination ip
+    unsigned char      iph_ihl:5, iph_ver:4;    // ip header length, ip header version
+    unsigned char      iph_tos;                 // ip header type to service
+    unsigned short int iph_len;                 // ip header datagram length
+    unsigned short int iph_ident;               // ip header identifier
+    unsigned char      iph_flag;                // ip header flag
+    unsigned short int iph_offset;              // ip header offset
+    unsigned char      iph_ttl;                 // ip header time to live
+    unsigned char      iph_protocol;            // ip header protocol
+    unsigned short int iph_chksum;              // ip header check sum
+    unsigned int       iph_sourceip;            // ip header source ip
+    unsigned int       iph_destip;              // ip header destination ip
 };
 
 struct udpheader {
-	unsigned short int udph_srcport;
-	unsigned short int udph_destport;
-	unsigned short int udph_len;
-	unsigned short int udph_chksum;
+    unsigned short int udph_srcport;
+    unsigned short int udph_destport;
+    unsigned short int udph_len;
+    unsigned short int udph_chksum;
 };
 
 unsigned short csum(unsigned short *buf, int nwords) {
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     }
 
     // datagram
-	char buffer[PCKT_LEN];
+    char buffer[PCKT_LEN];
 
     // header's structure
     struct ipheader *ip = (struct ipheader *) buffer;
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
     // ip header
     ip->iph_ihl = 5;
     ip->iph_ver = 4;
-    ip->iph_tos = 16;	// low delay
+    ip->iph_tos = 16;   // low delay
     ip->iph_len = sizeof(struct ipheader) + sizeof(struct udpheader);
     ip->iph_ident = htons(54321);
     ip->iph_ttl = 64;
@@ -85,29 +85,29 @@ int main(int argc, char *argv[]) {
     ip->iph_destip = inet_addr(argv[3]);
 
     udp->udph_srcport = htons(atoi(argv[2]));
-	udp->udph_destport = htons(atoi(argv[4]));
-	udp->udph_len = htons(sizeof(struct udpheader));
-	
-	ip->iph_chksum = csum((unsigned short *)buffer, sizeof(struct ipheader) + sizeof(struct udpheader));
-	
-	int one = 1;
-	const int *val = &one;
-	if (setsockopt(sd, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0) {
-		perror("setsockopt() error");
-		exit(-1);
-	} else printf("setsockopt() is OK.\n");
-	printf("Trying...\n");
-	printf("Using raw socket and UDP protocol\n");
-	printf("Using Source IP: %s port: %u, Target IP: %s port: %u.\n", argv[1], atoi(argv[2]), argv[3], atoi(argv[4]));
+    udp->udph_destport = htons(atoi(argv[4]));
+    udp->udph_len = htons(sizeof(struct udpheader));
+    
+    ip->iph_chksum = csum((unsigned short *)buffer, sizeof(struct ipheader) + sizeof(struct udpheader));
+    
+    int one = 1;
+    const int *val = &one;
+    if (setsockopt(sd, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0) {
+        perror("setsockopt() error");
+        exit(-1);
+    } else printf("setsockopt() is OK.\n");
+    printf("Trying...\n");
+    printf("Using raw socket and UDP protocol\n");
+    printf("Using Source IP: %s port: %u, Target IP: %s port: %u.\n", argv[1], atoi(argv[2]), argv[3], atoi(argv[4]));
 
-	for (int cnt = 1 ; cnt <= 20 ; cnt++) {
-		if (sendto(sd, buffer, ip->iph_len, 0, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-			perror("sendto() error");
-			exit(-1);
-		} else printf("Count #%u - sendto() is OK.\n", cnt), sleep(2);
-	}
-	close(sd);
-	return 0;
+    for (int cnt = 1 ; cnt <= 20 ; cnt++) {
+        if (sendto(sd, buffer, ip->iph_len, 0, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+            perror("sendto() error");
+            exit(-1);
+        } else printf("Count #%u - sendto() is OK.\n", cnt), sleep(2);
+    }
+    close(sd);
+    return 0;
 
 
 }
