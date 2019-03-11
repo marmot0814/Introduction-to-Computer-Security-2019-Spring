@@ -20,17 +20,17 @@ void formatDNSQuery(char *dns_header, char *query) {
 	}
 	*dns_header++ = '\0';
 }
-void createDNSQuery(char *dns_header, char *query) {
+void createDNSQuery(char *dns_header, char *query, unsigned long *dns_data_len) {
 	formatDNSQuery(dns_header, query);
-	struct _dns_query *dns_query = (struct _dns_query *)(dns_header + strlen((const char *)query));
+	struct _dns_query *dns_query = (struct _dns_query *)(dns_header + strlen((const char *)dns_header) + 1);
 	dns_query->qtype = htons(255);
 	dns_query->qclass = htons(1);
+	*dns_data_len = sizeof(struct dns) + strlen((const char *)dns_header) + 1 + sizeof(struct _dns_query);
 }
 void createDNSData(char *dns_data, unsigned long *dns_data_len, char *src_ip, int src_port, char *dst_ip, int dst_port, char *query) {
 	struct dns *dns_header = (struct dns *)dns_data;
 	createDNSHeader(dns_header);
-	createDNSQuery((char *)(dns_header + sizeof(struct dns)), query);
-	*dns_data_len = sizeof(struct dns) + strlen((const char *)query) + sizeof(struct _dns_query) + 1;
+	createDNSQuery((char *)(dns_data + sizeof(struct dns)), query, dns_data_len);
 }
 void createUDPHeader(unsigned long dns_data_len, struct udphdr *udp_header, int src_port, int dst_port) {
 	udp_header->uh_sport = htons(src_port);
@@ -74,15 +74,23 @@ void createIPHeader(unsigned long dns_data_len, struct ip *ip_header, char *src_
 	pseudo_header->protocol = IPPROTO_UDP;
 	pseudo_header->udp_len = htons(sizeof(struct udphdr) + dns_data_len);
 }
-void sendDNSQuery(char *src_ip, int src_port, char *dst_ip, int dst_port, char *query) {
-	char datagram[PKG_LEN];
+void sendDNSQuery(char *src_ip, int src_port, char *dst_ip, int dst_port, char *_query) {
+
+	// create datagram array and ip udp pointer
+	char datagram[PKG_LEN], query[100]; 
+	memcpy(query, _query, strlen(_query) + 1);
 	struct ip *ip_header = (struct ip *) datagram;
 	struct udphdr *udp_header = (struct udphdr *)(datagram + sizeof(struct ip));
 
+	// create dns array and length
 	char dns_data[1000];
 	unsigned long dns_data_len;
+
+	// create DNS data
 	createDNSData(dns_data, &dns_data_len, src_ip, src_port, dst_ip, dst_port, query);
 	memcpy(datagram + sizeof(struct ip) + sizeof(struct udphdr), dns_data, dns_data_len);
+
+
 	createUDPHeader(dns_data_len, udp_header, src_port, dst_port);
 
 	struct sockaddr_in dst;
@@ -107,5 +115,4 @@ void sendDNSQuery(char *src_ip, int src_port, char *dst_ip, int dst_port, char *
 		perror("setsockopt failed.\n");
 	if (sendto(s, datagram, ip_header->ip_len, 0, (struct sockaddr *)&dst, sizeof(dst)) < 0)
 		perror("sendto failed.\n");
-
 }

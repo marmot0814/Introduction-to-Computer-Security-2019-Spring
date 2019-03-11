@@ -1,3 +1,4 @@
-*.o
-*.d
-rawudp
+*
+!*.h
+!*.c
+!Makefile
