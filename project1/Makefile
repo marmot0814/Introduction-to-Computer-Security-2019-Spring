@@ -1,4 +1,4 @@
-TARGET  = rawudp
+TARGET  = attack
 SRC_DIR = ./
 INC_DIR = ./
 
