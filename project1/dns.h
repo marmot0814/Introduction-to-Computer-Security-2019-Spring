@@ -24,4 +24,4 @@ struct pseudo {
 	u_int8_t protocol;
 	u_int16_t udp_len;
 };
-void sendDNSQuery(char *src_ip, int src_port, char *dst_ip, int dst_port, char *query);
+void sendDNSQuery(char *src_ip, int src_port, char *dst_ip, int dst_port, char *query, int type);
