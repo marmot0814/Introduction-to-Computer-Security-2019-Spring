@@ -9,6 +9,7 @@ void createDNSHeader(struct dns *dns_header) {
 	dns_header->additional_rrs = 0;
 }
 void formatDNSQuery(char *dns_header, char *query) {
+    // transform query into dns form, for example: www.google.com => 3w6google3com
 	strcat(query, ".");
 	for (int i = 0, lock = 0 ; query[i] ; i++) {
 		if (query[i] == '.') {
@@ -39,19 +40,26 @@ void createUDPHeader(unsigned long dns_data_len, struct udphdr *udp_header, int 
 	udp_header->uh_sum = 0;
 }
 unsigned short calculateCheckSum(unsigned short *ptr, int nbytes) {
+    // calculate checksum, sum of each two bytes(short)
 	register long sum = 0, answer;
 	unsigned short oddbyte;
 	while (nbytes > 1) {
 		sum += *ptr++;
 		nbytes -= 2;
 	}
+
+    // special case: odd bytes
 	if (nbytes == 1) {
 		oddbyte = 0;
 		*((u_char *)&oddbyte) = *(u_char *)ptr;
 		sum += oddbyte;
 	}
+
+    // add carry to low bit when overflow
 	sum = (sum >> 16) + (sum & 0xffff);
 	sum += (sum >> 16);
+
+    // flip each bits and get the checksum
 	answer = (short)~sum;
 	return (answer);
 }
@@ -88,25 +96,33 @@ void sendDNSQuery(char *src_ip, int src_port, char *dst_ip, int dst_port, char *
 
 	// create DNS data
 	createDNSData(dns_data, &dns_data_len, src_ip, src_port, dst_ip, dst_port, query, type);
+
+    // copy dns header to datagram
 	memcpy(datagram + sizeof(struct ip) + sizeof(struct udphdr), dns_data, dns_data_len);
 
-
+    // create UDP header
 	createUDPHeader(dns_data_len, udp_header, src_port, dst_port);
 
+    // create socket object and ste dst_port and dst_ip
 	struct sockaddr_in dst;
 	dst.sin_family = AF_INET;
 	dst.sin_port = htons(dst_port);
 	dst.sin_addr.s_addr = inet_addr(dst_ip);
 
+    // collect target which need to be calculated in UDP checksum
 	struct pseudo pseudo_header;
+
+    // create IP header
 	createIPHeader(dns_data_len, ip_header, src_ip, dst_ip, &pseudo_header);
 
+    // setup udp checksum from pseudo header
 	int pseudo_len = (int)(sizeof(struct pseudo) + sizeof(struct udphdr) + dns_data_len);
 	char *pseudo_data = malloc(pseudo_len);
 	memcpy(pseudo_data, (char *)&pseudo_header, sizeof(struct pseudo));
 	memcpy(pseudo_data + sizeof(struct pseudo), udp_header, sizeof(struct udphdr) + dns_data_len);
 	udp_header->uh_sum = calculateCheckSum((unsigned short *)pseudo_data, pseudo_len);
 
+    // send packet to socket
 	int s = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
 	if (s < 0)
 		perror("socet failed.\n");
