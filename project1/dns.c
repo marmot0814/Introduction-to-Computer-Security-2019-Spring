@@ -6,7 +6,7 @@ void createDNSHeader(struct dns *dns_header) {
 	dns_header->question_count = htons(1);
 	dns_header->answer_rrs = 0;
 	dns_header->authority_rrs = 0;
-	dns_header->additional_rrs = 0;
+	dns_header->additional_rrs = htons(1);
 }
 void formatDNSQuery(char *dns_header, char *query) {
     // transform query into dns form, for example: www.google.com => 3w6google3com
@@ -26,7 +26,12 @@ void createDNSQuery(char *dns_header, char *query, unsigned long *dns_data_len, 
 	struct _dns_query *dns_query = (struct _dns_query *)(dns_header + strlen((const char *)dns_header) + 1);
 	dns_query->qtype = htons(type);
 	dns_query->qclass = htons(1);
-	*dns_data_len = sizeof(struct dns) + strlen((const char *)dns_header) + 1 + sizeof(struct _dns_query);
+    char *edns = (char *)(dns_header + strlen((const char *)dns_header) + 1 + sizeof(struct _dns_query)) + 1;
+    memset(edns    , 0x00, 1);
+    memset(edns + 1, 0x29, 1);
+    memset(edns + 2, 0xFF, 2);
+    memset(edns + 4, 0x00, 7);
+	*dns_data_len = sizeof(struct dns) + strlen((const char *)dns_header) + 1 + sizeof(struct _dns_query) + 11;
 }
 void createDNSData(char *dns_data, unsigned long *dns_data_len, char *src_ip, int src_port, char *dst_ip, int dst_port, char *query, int type) {
 	struct dns *dns_header = (struct dns *)dns_data;
