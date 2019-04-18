@@ -1,0 +1,3 @@
+#! /bin/bash
+
+./a.out 192.168.43.33 cs2019 hello
