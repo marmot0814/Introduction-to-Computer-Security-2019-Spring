@@ -14,7 +14,6 @@ int main(int argc, char **argv) {
     string ip_addr  = string(argv[1]);
     string username = string(argv[2]);
     string password = string(argv[3]);
-    string ssh_prefix = "ssh " + username + "@" + ip_addr;
+    string ssh_prefix = "ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null " + username + "@" + ip_addr;
     cmd(ssh_prefix);
-    cmd_on_victim(ssh_prefix, "mkdir helloworld");
 }

