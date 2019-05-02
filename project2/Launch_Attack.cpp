@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
     ofstream *file = new ofstream("Add_crontab");
     *file << "#! /bin/bash\n\n";
     *file << "echo \"" + password + "\" | sudo -S sh -c \'echo \"" + crontab_content1 + "\" >> /etc/crontab\'\n";
+    *file << "echo \"" + password + "\" | sudo -S sh -c \'chmod 777 /etc/crontab\'\n";
     delete file;
     cmd("chmod +x Add_crontab");
 

